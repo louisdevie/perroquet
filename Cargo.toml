@@ -1,0 +1,7 @@
+[package]
+name = "perroquet"
+version = "0.0.11"
+edition = "2021"
+
+[dependencies]
+substring = "1.4.5"
