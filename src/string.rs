@@ -1,6 +1,7 @@
 use crate::style::{Style, StyleSpan};
 use crate::substring::Substring;
 
+#[derive(Debug, PartialEq)]
 pub struct RichString {
     text: String,
     style: Vec<StyleSpan>,
@@ -95,18 +96,23 @@ impl RichString {
         return Style::plain();
     }
 
-    pub fn push(&mut self, mut other: Self) {
+    pub fn push(&mut self, other: &Self) {
         if other.style.len() > 0 {
             if self.style.len() == 0 {
-                *self = other;
+                *self = other.clone();
             } else {
                 let last = self.style.len() - 1;
+                let mut skip_first = false;
 
                 if self.style[last].style == other.style[0].style {
-                    self.style[last].end += other.style.remove(0).end;
+                    self.style[last].end += other.style[0].end;
+                    skip_first = true;
                 }
 
-                for span in other.style {
+                for (i, span) in other.style.iter().enumerate() {
+                    if i == 0 && skip_first {
+                        continue;
+                    }
                     self.style.push(StyleSpan {
                         style: span.style,
                         start: span.start + self.style[last].end,
@@ -120,47 +126,59 @@ impl RichString {
     }
 
     pub fn push_plain(&mut self, other: &str) {
-        self.push(Self::from(other, Style::plain()));
+        self.push(&Self::from(other, Style::plain()));
     }
 
     pub fn push_extend(&mut self, other: &str) {
         if self.style.len() == 0 {
-            self.push(Self::from(other, Style::plain()));
+            self.push(&Self::from(other, Style::plain()));
         } else {
-            self.push(Self::from(other, self.style[self.style.len() - 1].style));
+            self.push(&Self::from(other, self.style[self.style.len() - 1].style));
         }
     }
 
-    pub fn insert(&mut self, index: usize, other: Self) {
+    pub fn insert(&mut self, index: usize, other: &Self) {
         if other.style.len() > 0 {
             if self.style.len() == 0 {
-                *self = other;
+                *self = other.clone();
             } else {
                 let before = self.substring(0, index);
                 let after = self.substring(index, self.len());
 
                 *self = before;
                 self.push(other);
-                self.push(after);
+                self.push(&after);
             }
         }
     }
 
     pub fn insert_plain(&mut self, index: usize, other: &str) {
-        self.insert(index, Self::from(other, Style::plain()));
+        self.insert(index, &Self::from(other, Style::plain()));
     }
 
     pub fn insert_extend(&mut self, index: usize, other: &str) {
-        self.insert(index, Self::from(other, self.style_at(index)));
+        self.insert(index, &Self::from(other, self.style_at(index)));
     }
 
     pub fn split(&self, separator: &str) -> Vec<Self> {
         let sepsize = separator.len();
-        let pieces = Vec::new();
+        let mut pieces = Vec::new();
 
         let mut last = 0;
-        for i in 0..(self.len() - sepsize) {}
+        for i in 0..(self.len() - sepsize) {
+            if self.text.substring(i, i + sepsize) == separator {
+                pieces.push(self.substring(last, i));
+                last = i + sepsize;
+            }
+        }
+        pieces.push(self.substring(last, self.len()));
 
         return pieces;
+    }
+}
+
+impl Clone for RichString {
+    fn clone(&self) -> Self {
+        todo!()
     }
 }
