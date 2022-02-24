@@ -1,5 +1,6 @@
 use crate::style::{Style, StyleSpan};
 use crate::substring::Substring;
+use std::ops::Add;
 
 #[derive(Debug, PartialEq)]
 pub struct RichString {
@@ -174,6 +175,20 @@ impl RichString {
         pieces.push(self.substring(last, self.len()));
 
         return pieces;
+    }
+}
+
+impl Add<RichString> for &str {
+    type Output = RichString;
+    fn add(self, _rhs: RichString) -> RichString {
+        todo!()
+    }
+}
+
+impl Add<&str> for RichString {
+    type Output = RichString;
+    fn add(self, _rhs: &str) -> RichString {
+        todo!()
     }
 }
 

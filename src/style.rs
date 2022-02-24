@@ -1,29 +1,45 @@
+use crate::RichString;
 use crate::{Color, Decoration, Feature};
+use std::ops::BitAnd;
 
+/// A style to be applied on text
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Style {
+    /// Text color
     pub foreground: Color,
+    /// Background color
     pub background: Color,
+    /// Bold
     pub bold: Feature,
+    /// Italic
     pub italic: Feature,
-    pub dim: Feature,
-    pub bright: Feature,
+    /// Underline
     pub decoration: Decoration,
-    pub inverted: Feature,
 }
 
 impl Style {
+    /// Returns a style that inherits all its properties
     pub fn plain() -> Self {
         Self {
             foreground: Color::INHERIT,
             background: Color::INHERIT,
             bold: Feature::INHERIT,
             italic: Feature::INHERIT,
-            dim: Feature::INHERIT,
-            bright: Feature::INHERIT,
             decoration: Decoration::INHERIT,
-            inverted: Feature::INHERIT,
         }
+    }
+
+    /// Creates
+    pub fn apply_to(&self, string: RichString) -> RichString {
+        string
+    }
+}
+
+impl BitAnd for Style {
+    type Output = Self;
+
+    fn bitand(self, _rhs: Self) -> Self {
+        todo!()
     }
 }
 
