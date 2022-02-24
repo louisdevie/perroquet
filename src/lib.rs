@@ -1,4 +1,4 @@
-#[deny(missing_docs)]
+#![deny(missing_docs)]
 extern crate substring;
 
 pub mod style;
