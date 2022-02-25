@@ -1,5 +1,10 @@
 #![deny(missing_docs)]
 #![deny(warnings)]
+
+//! Provides styling for terminal output
+//!
+//! Made to work with [textflow](https://docs.rs/textflow)
+
 extern crate substring;
 
 mod style;
@@ -11,7 +16,8 @@ pub use string::RichString;
 mod attributes;
 pub use attributes::{Color, Decoration, Feature};
 
-const YELLOW: Style = Style {
+/// Yellow text
+pub const YELLOW: Style = Style {
     foreground: Color::YELLOW,
     background: Color::INHERIT,
     bold: Feature::INHERIT,
@@ -19,7 +25,8 @@ const YELLOW: Style = Style {
     decoration: Decoration::INHERIT,
 };
 
-const BOLD: Style = Style {
+/// Enables bold
+pub const BOLD: Style = Style {
     foreground: Color::INHERIT,
     background: Color::INHERIT,
     bold: Feature::ENABLED,
@@ -27,10 +34,11 @@ const BOLD: Style = Style {
     decoration: Decoration::INHERIT,
 };
 
+/// Apply a style to a string literal
 #[macro_export]
 macro_rules! style {
     ($string: literal) => {
-        RichString::from($string, perroquet::style::Style::plain())
+        RichString::from($string, Style::plain())
     };
     ($string: literal, $style: expr) => {
         RichString::from($string, $style)
