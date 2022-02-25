@@ -20,25 +20,23 @@ impl RichString {
             text: String::new(),
             style: vec![],
         }
+        .into_normalised()
     }
 
     pub fn from(text: &str, style: Style) -> Self {
-        if text.len() == 0 {
-            Self::new()
-        } else {
-            Self {
-                text: String::from(text),
-                style: vec![StyleSpan {
-                    style,
-                    start: 0,
-                    end: text.len(),
-                }],
-            }
+        Self {
+            text: String::from(text),
+            style: vec![StyleSpan {
+                style,
+                start: 0,
+                end: text.chars().count(),
+            }],
         }
+        .into_normalised()
     }
 
     pub fn len(&self) -> usize {
-        self.text.len()
+        self.text.chars().count()
     }
 
     pub fn raw(&self) -> &str {
@@ -56,6 +54,7 @@ impl RichString {
                         start,
                         end,
                     });
+
                     break;
                 } else {
                     style.push(StyleSpan {
@@ -86,6 +85,7 @@ impl RichString {
             text: String::from(self.text.substring(start, end)),
             style,
         }
+        .into_normalised()
     }
 
     pub fn style_at(&self, index: usize) -> Style {
@@ -103,17 +103,8 @@ impl RichString {
                 *self = other.clone();
             } else {
                 let last = self.style.len() - 1;
-                let mut skip_first = false;
 
-                if self.style[last].style == other.style[0].style {
-                    self.style[last].end += other.style[0].end;
-                    skip_first = true;
-                }
-
-                for (i, span) in other.style.iter().enumerate() {
-                    if i == 0 && skip_first {
-                        continue;
-                    }
+                for span in &other.style {
                     self.style.push(StyleSpan {
                         style: span.style,
                         start: span.start + self.style[last].end,
@@ -124,6 +115,7 @@ impl RichString {
                 self.text.push_str(&other.text);
             }
         }
+        self.normalise();
     }
 
     pub fn push_plain(&mut self, other: &str) {
@@ -151,6 +143,7 @@ impl RichString {
                 self.push(&after);
             }
         }
+        self.normalise();
     }
 
     pub fn insert_plain(&mut self, index: usize, other: &str) {
@@ -176,24 +169,65 @@ impl RichString {
 
         return pieces;
     }
+
+    pub fn into_normalised(mut self) -> Self {
+        self.normalise();
+        self
+    }
+
+    pub fn normalise(&mut self) {
+        // remove zero-sized spans
+        self.style.retain(|span| span.start < span.end);
+    }
+
+    pub fn into_complemented(mut self, style: Style) -> Self {
+        self.complement(style);
+        self.into_normalised()
+    }
+
+    pub fn complement(&mut self, style: Style) {
+        for span in self.style.iter_mut() {
+            span.style = span.style & style;
+        }
+        self.normalise();
+    }
+
+    pub fn into_overwritten(mut self, style: Style) -> Self {
+        self.overwrite(style);
+        self
+    }
+
+    pub fn overwrite(&mut self, style: Style) {
+        for span in self.style.iter_mut() {
+            span.style = style & span.style;
+        }
+        self.normalise()
+    }
 }
 
 impl Add<RichString> for &str {
     type Output = RichString;
-    fn add(self, _rhs: RichString) -> RichString {
-        todo!()
+
+    fn add(self, mut rhs: RichString) -> RichString {
+        rhs.insert_plain(0, self);
+        rhs
     }
 }
 
 impl Add<&str> for RichString {
     type Output = RichString;
-    fn add(self, _rhs: &str) -> RichString {
-        todo!()
+
+    fn add(mut self, rhs: &str) -> RichString {
+        self.push_plain(rhs);
+        self
     }
 }
 
 impl Clone for RichString {
     fn clone(&self) -> Self {
-        todo!()
+        Self {
+            text: self.text.clone(),
+            style: self.style.clone(),
+        }
     }
 }

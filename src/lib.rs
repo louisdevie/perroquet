@@ -36,7 +36,7 @@ macro_rules! style {
         RichString::from($string, $style)
     };
     ($string: expr, $style: expr) => {
-        ($style).apply_to($string)
+        ($string).into_complemented($style)
     };
 }
 

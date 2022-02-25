@@ -1,4 +1,3 @@
-use crate::RichString;
 use crate::{Color, Decoration, Feature};
 use std::ops::BitAnd;
 
@@ -28,22 +27,43 @@ impl Style {
             decoration: Decoration::INHERIT,
         }
     }
-
-    /// Creates
-    pub fn apply_to(&self, string: RichString) -> RichString {
-        string
-    }
 }
 
 impl BitAnd for Style {
     type Output = Self;
 
-    fn bitand(self, _rhs: Self) -> Self {
-        todo!()
+    fn bitand(self, rhs: Self) -> Self {
+        Self {
+            foreground: if self.foreground == Color::INHERIT {
+                rhs.foreground
+            } else {
+                self.foreground
+            },
+            background: if self.background == Color::INHERIT {
+                rhs.background
+            } else {
+                self.background
+            },
+            bold: if self.bold == Feature::INHERIT {
+                rhs.bold
+            } else {
+                self.bold
+            },
+            italic: if self.italic == Feature::INHERIT {
+                rhs.italic
+            } else {
+                self.italic
+            },
+            decoration: if self.decoration == Decoration::INHERIT {
+                rhs.decoration
+            } else {
+                self.decoration
+            },
+        }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StyleSpan {
     pub start: usize,
     pub end: usize,
