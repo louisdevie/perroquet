@@ -1,1 +1,1 @@
-# perroquet
+# perroquet [![tests](https://github.com/louisdevie/perroquet/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/louisdevie/perroquet/actions/workflows/tests.yml) [![codecov](https://codecov.io/gh/louisdevie/perroquet/branch/main/graph/badge.svg?token=vmQAbpLwOU)](https://codecov.io/gh/louisdevie/perroquet)
