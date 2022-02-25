@@ -69,3 +69,71 @@ pub struct StyleSpan {
     pub end: usize,
     pub style: Style,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_plain() {
+        assert_eq!(
+            Style::plain(),
+            Style {
+                foreground: Color::INHERIT,
+                background: Color::INHERIT,
+                bold: Feature::INHERIT,
+                italic: Feature::INHERIT,
+                decoration: Decoration::INHERIT,
+            }
+        );
+    }
+
+    #[test]
+    fn test_bitand() {
+        assert_eq!(
+            Style {
+                foreground: Color::INHERIT,
+                background: Color::INHERIT,
+                bold: Feature::INHERIT,
+                italic: Feature::INHERIT,
+                decoration: Decoration::INHERIT,
+            } & Style {
+                foreground: Color::RED,
+                background: Color::GREEN,
+                bold: Feature::ENABLED,
+                italic: Feature::DISABLED,
+                decoration: Decoration::UNDERLINE,
+            },
+            Style {
+                foreground: Color::RED,
+                background: Color::GREEN,
+                bold: Feature::ENABLED,
+                italic: Feature::DISABLED,
+                decoration: Decoration::UNDERLINE,
+            }
+        );
+
+        assert_eq!(
+            Style {
+                foreground: Color::BLUE,
+                background: Color::PURPLE,
+                bold: Feature::DISABLED,
+                italic: Feature::ENABLED,
+                decoration: Decoration::NONE,
+            } & Style {
+                foreground: Color::RED,
+                background: Color::GREEN,
+                bold: Feature::ENABLED,
+                italic: Feature::DISABLED,
+                decoration: Decoration::UNDERLINE,
+            },
+            Style {
+                foreground: Color::BLUE,
+                background: Color::PURPLE,
+                bold: Feature::DISABLED,
+                italic: Feature::ENABLED,
+                decoration: Decoration::NONE,
+            }
+        );
+    }
+}

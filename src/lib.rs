@@ -16,22 +16,10 @@ pub use string::RichString;
 mod attributes;
 pub use attributes::{Color, Decoration, Feature};
 
-/// Yellow text
-pub const YELLOW: Style = Style {
-    foreground: Color::YELLOW,
-    background: Color::INHERIT,
-    bold: Feature::INHERIT,
-    italic: Feature::INHERIT,
-    decoration: Decoration::INHERIT,
-};
-
-/// Enables bold
-pub const BOLD: Style = Style {
-    foreground: Color::INHERIT,
-    background: Color::INHERIT,
-    bold: Feature::ENABLED,
-    italic: Feature::INHERIT,
-    decoration: Decoration::INHERIT,
+mod shortcuts;
+pub use shortcuts::{
+    BLACK, BLUE, BOLD, CYAN, GREEN, ITALIC, LIGHTGREY, ON_BLACK, ON_BLUE, ON_CYAN, ON_GREEN,
+    ON_LIGHTGREY, ON_PURPLE, ON_RED, ON_YELLOW, PURPLE, RED, UNDERLINE, YELLOW,
 };
 
 /// Apply a style to a string literal

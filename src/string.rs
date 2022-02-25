@@ -62,31 +62,31 @@ impl RichString {
                 if end <= span.end {
                     style.push(StyleSpan {
                         style: span.style,
-                        start,
-                        end,
+                        start: 0,
+                        end: end - start,
                     });
 
                     break;
                 } else {
                     style.push(StyleSpan {
                         style: span.style,
-                        start,
-                        end: span.end,
+                        start: 0,
+                        end: span.end - start,
                     });
                 }
             } else {
                 if end <= span.end {
                     style.push(StyleSpan {
                         style: span.style,
-                        start: span.start,
-                        end,
+                        start: span.start - start,
+                        end: end - start,
                     });
                     break;
                 } else {
                     style.push(StyleSpan {
                         style: span.style,
-                        start: span.start,
-                        end: span.end,
+                        start: span.start - start,
+                        end: span.end - start,
                     });
                 }
             }
@@ -127,8 +127,8 @@ impl RichString {
 
                 self.text.push_str(&other.text);
             }
+            self.normalise();
         }
-        self.normalise();
     }
 
     /// Creates a new string without style and append it
@@ -158,8 +158,8 @@ impl RichString {
                 self.push(other);
                 self.push(&after);
             }
+            self.normalise();
         }
-        self.normalise();
     }
 
     /// Creates a new string without style and insert it
@@ -180,7 +180,7 @@ impl RichString {
         let mut pieces = Vec::new();
 
         let mut last = 0;
-        for i in 0..(self.len() - sepsize) {
+        for i in 0..(self.len() - sepsize + 1) {
             if self.text.substring(i, i + sepsize) == separator {
                 pieces.push(self.substring(last, i));
                 last = i + sepsize;
@@ -248,11 +248,222 @@ impl Add<&str> for RichString {
     }
 }
 
+impl Add<RichString> for RichString {
+    type Output = RichString;
+
+    fn add(mut self, rhs: RichString) -> RichString {
+        self.push(&rhs);
+        self
+    }
+}
+
 impl Clone for RichString {
     fn clone(&self) -> Self {
         Self {
             text: self.text.clone(),
             style: self.style.clone(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::shortcuts::*;
+
+    #[test]
+    fn test_into() {
+        let string: RichString = "colorful".into();
+
+        assert_eq!(string, RichString::from("colorful", Style::plain()));
+    }
+
+    #[test]
+    fn test_new() {
+        assert_eq!(RichString::new(), RichString::from("", Style::plain()));
+    }
+
+    #[test]
+    fn test_from() {
+        let string = RichString::from("colorful", YELLOW);
+
+        assert_eq!(string.raw(), "colorful");
+
+        for i in 0..7 {
+            assert_eq!(string.style_at(i), YELLOW);
+        }
+    }
+
+    #[test]
+    fn test_len() {
+        let string = RichString::from("çōłöŕfûl", YELLOW);
+
+        assert_eq!(string.len(), 8);
+    }
+
+    #[test]
+    fn test_raw() {
+        let string = RichString::from("colorful", Style::plain());
+
+        assert_eq!(string.raw(), "colorful");
+    }
+
+    #[test]
+    fn test_substring() {
+        let string = RichString::from("col", YELLOW)
+            + RichString::from("or", BOLD & RED)
+            + RichString::from("ful", ITALIC & ON_PURPLE);
+
+        let sub1 = RichString::from("ol", YELLOW);
+        assert_eq!(string.substring(1, 3), sub1);
+
+        let sub1 = RichString::from("l", YELLOW)
+            + RichString::from("or", BOLD & RED)
+            + RichString::from("f", ITALIC & ON_PURPLE);
+        assert_eq!(string.substring(2, 6), sub1);
+    }
+
+    #[test]
+    fn test_style_at() {
+        let string = RichString::from("col", YELLOW)
+            + RichString::from("or", BOLD & RED)
+            + RichString::from("ful", ITALIC & ON_PURPLE);
+
+        assert_eq!(string.style_at(0), YELLOW);
+        assert_eq!(string.style_at(3), BOLD & RED);
+        assert_eq!(string.style_at(5), ITALIC & ON_PURPLE);
+        assert_eq!(string.style_at(8), Style::plain());
+    }
+
+    #[test]
+    fn test_push() {
+        let mut string = RichString::from("color", GREEN);
+        string.push(&RichString::from("ful", BOLD));
+
+        for i in 0..5 {
+            assert_eq!(string.style_at(i), GREEN);
+        }
+        for i in 5..8 {
+            assert_eq!(string.style_at(i), BOLD);
+        }
+    }
+
+    #[test]
+    fn test_push_plain() {
+        let mut string = RichString::from("color", GREEN);
+        string.push_plain("ful");
+
+        for i in 0..5 {
+            assert_eq!(string.style_at(i), GREEN);
+        }
+        for i in 5..8 {
+            assert_eq!(string.style_at(i), Style::plain());
+        }
+    }
+
+    #[test]
+    fn test_push_extend() {
+        let mut string = RichString::from("color", GREEN);
+        string.push_extend("ful");
+
+        for i in 0..8 {
+            assert_eq!(string.style_at(i), GREEN);
+        }
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut string = RichString::from("coful", GREEN);
+        string.insert(2, &RichString::from("lor", BOLD));
+
+        assert_eq!(string.style_at(0), GREEN);
+        assert_eq!(string.style_at(1), GREEN);
+        assert_eq!(string.style_at(2), BOLD);
+        assert_eq!(string.style_at(3), BOLD);
+        assert_eq!(string.style_at(4), BOLD);
+        assert_eq!(string.style_at(5), GREEN);
+        assert_eq!(string.style_at(6), GREEN);
+        assert_eq!(string.style_at(7), GREEN);
+    }
+
+    #[test]
+    fn test_insert_plain() {
+        let mut string = RichString::from("coful", GREEN);
+        string.insert_plain(2, "lor");
+
+        assert_eq!(string.style_at(0), GREEN);
+        assert_eq!(string.style_at(1), GREEN);
+        assert_eq!(string.style_at(2), Style::plain());
+        assert_eq!(string.style_at(3), Style::plain());
+        assert_eq!(string.style_at(4), Style::plain());
+        assert_eq!(string.style_at(5), GREEN);
+        assert_eq!(string.style_at(6), GREEN);
+        assert_eq!(string.style_at(7), GREEN);
+    }
+
+    #[test]
+    fn test_insert_extend() {
+        let mut string1 = RichString::from("coful", GREEN);
+        string1.insert_extend(2, "lor");
+
+        for i in 0..8 {
+            assert_eq!(string1.style_at(i), GREEN);
+        }
+
+        let mut string2 = RichString::from("orful", GREEN);
+        string2.insert_extend(0, "col");
+
+        for i in 0..8 {
+            assert_eq!(string2.style_at(i), GREEN);
+        }
+    }
+
+    #[test]
+    fn test_split() {
+        let string = RichString::from("colorful", CYAN);
+
+        assert_eq!(
+            string.split("o"),
+            vec![
+                RichString::from("c", CYAN),
+                RichString::from("l", CYAN),
+                RichString::from("rful", CYAN),
+            ]
+        );
+
+        assert_eq!(
+            string.split("or"),
+            vec![RichString::from("col", CYAN), RichString::from("ful", CYAN),]
+        );
+
+        assert_eq!(
+            string.split("col"),
+            vec![RichString::from("", CYAN), RichString::from("orful", CYAN),]
+        );
+
+        assert_eq!(
+            string.split("ful"),
+            vec![RichString::from("color", CYAN), RichString::from("", CYAN),]
+        );
+    }
+
+    #[test]
+    fn test_complement() {
+        let string = "col" + RichString::from("or", PURPLE & BOLD) + "ful";
+        let expected = RichString::from("col", YELLOW)
+            + RichString::from("or", PURPLE & BOLD)
+            + RichString::from("ful", YELLOW);
+
+        assert_eq!(string.into_complemented(YELLOW), expected);
+    }
+
+    #[test]
+    fn test_overwrite() {
+        let string = "col" + RichString::from("or", PURPLE & BOLD) + "ful";
+        let expected = RichString::from("col", YELLOW)
+            + RichString::from("or", YELLOW & BOLD)
+            + RichString::from("ful", YELLOW);
+
+        assert_eq!(string.into_overwritten(YELLOW), expected);
     }
 }
